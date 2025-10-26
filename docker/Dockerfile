@@ -52,20 +52,16 @@ RUN echo 'numpy<2.0' > constraints.txt && \
 RUN conda run -n ${VENV_NAME} conda install -y -c conda-forge pynini==2.1.5 && \
     conda run -n ${VENV_NAME} pip install \
         -r requirements_filtered.txt \
-        -c constraints.txt \
-        -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com && \
+        -c constraints.txt && \
     conda run -n ${VENV_NAME} pip install \
         pyloudnorm flask waitress transformers==4.53.3 vllm==0.9.0 \
-        -c constraints.txt \
-        -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host=mirrors.aliyun.com
+        -c constraints.txt
 
 
 # STEP 5: Upgrade onnxruntime
 RUN conda run -n ${VENV_NAME} pip uninstall -y onnxruntime onnxruntime-gpu && \
     conda run -n ${VENV_NAME} pip install \
         onnxruntime-gpu \
-        -i https://mirrors.aliyun.com/pypi/simple/ \
-        --trusted-host mirrors.aliyun.com \
         --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 
 RUN rm constraints.txt requirements_filtered.txt
