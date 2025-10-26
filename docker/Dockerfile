@@ -8,70 +8,64 @@ ENV PYTHONUNBUFFERED=1
 
 SHELL ["/bin/bash", "--login", "-c"]
 
+# Install system dependencies
 RUN apt-get update -y --fix-missing && \
     apt-get install -y git build-essential curl wget ffmpeg unzip git-lfs sox libsox-dev && \
     apt-get clean && \
     git lfs install
 
-# --- Conda Installation ---
-# RUN wget --quiet https://github.com/conda-forge/miniforge/releases/latest/download/Miniforge3-Linux-x86_64.sh -O ~/miniforge.sh && \
-#     /bin/bash ~/miniforge.sh -b -p /opt/conda && \
-#     rm ~/miniforge.sh
-# --- Conda Installation ---
-# 从构建上下文复制预先下载好的安装脚本
+# --- Install Miniforge (Conda base) ---
 COPY docker/Miniforge3-Linux-x86_64.sh /tmp/miniforge.sh
-
-# 执行安装脚本并随后清理
 RUN /bin/bash /tmp/miniforge.sh -b -p /opt/conda && \
     rm /tmp/miniforge.sh
 
-ENV PATH /opt/conda/bin:$PATH
+ENV PATH=/opt/conda/bin:$PATH
 
-# --- Conda Configuration ---
+# --- Install Mamba for faster environment management ---
+RUN conda install -y -c conda-forge mamba
+
+# --- Conda configuration (applies to Mamba too) ---
 RUN conda config --add channels conda-forge && \
     conda config --set channel_priority strict
 
-# --- Python Environment Setup ---
-# Create the environment that will actually be used
-RUN conda create -y -n ${VENV_NAME} python=3.10
-# Set up the shell to auto-activate this environment
+# --- Create Python environment using MAMBA (fast!) ---
+RUN mamba create -y -n ${VENV_NAME} python=3.10
+
+# --- Auto-activate environment in bash shells ---
 RUN echo "source /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
     echo "conda activate ${VENV_NAME}" >> ~/.bashrc
 
-# --- Project Checkout ---
+# --- Clone project ---
 WORKDIR /workspace
 ENV PYTHONPATH="${PYTHONPATH}:/workspace/CosyVoice:/workspace/CosyVoice/third_party/Matcha-TTS"
 RUN git clone --recursive https://github.com/FunAudioLLM/CosyVoice.git
 
 WORKDIR /workspace/CosyVoice
 
-# --- Python Dependencies Installation (Optimized for Caching) ---
+# --- Prepare filtered requirements ---
 RUN echo 'numpy<2.0' > constraints.txt && \
     grep -v '^numpy' requirements.txt | grep -v '^transformers' | grep -v '^vllm' > requirements_filtered.txt
 
-RUN conda run -n ${VENV_NAME} conda install -y -c conda-forge pynini==2.1.5 && \
-    conda run -n ${VENV_NAME} pip install \
-        -r requirements_filtered.txt \
-        -c constraints.txt && \
-    conda run -n ${VENV_NAME} pip install \
-        pyloudnorm flask waitress transformers==4.53.3 vllm==0.9.0 \
-        -c constraints.txt
+# --- Install conda packages with MAMBA ---
+RUN mamba install -y -n ${VENV_NAME} -c conda-forge pynini==2.1.5
 
+# --- Install PyPI packages with pip via conda run (safe in Docker) ---
+RUN conda run -n ${VENV_NAME} pip install -r requirements_filtered.txt -c constraints.txt && \
+    conda run -n ${VENV_NAME} pip install pyloudnorm flask waitress transformers==4.53.3 vllm==0.9.0 -c constraints.txt
 
-# STEP 5: Upgrade onnxruntime
+# --- Upgrade onnxruntime to CUDA 12 compatible version ---
 RUN conda run -n ${VENV_NAME} pip uninstall -y onnxruntime onnxruntime-gpu && \
-    conda run -n ${VENV_NAME} pip install \
-        onnxruntime-gpu \
+    conda run -n ${VENV_NAME} pip install onnxruntime-gpu \
         --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 
-RUN rm constraints.txt requirements_filtered.txt
+# --- Cleanup ---
+RUN rm -f constraints.txt requirements_filtered.txt
 
-# --- Application Setup ---
+# --- Copy application code ---
 COPY api/ /workspace/CosyVoice/api/
 COPY utils/ /workspace/CosyVoice/utils/
 
-# --- Expose Port & Health Check ---
+# --- Expose and health check ---
 EXPOSE 9996
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:9996/health || exit 1
-
