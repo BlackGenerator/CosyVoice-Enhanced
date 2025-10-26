@@ -81,6 +81,34 @@ services:
     networks:
       - cosyvoice-network
 
+  cosyvoice-webui:
+    image: cosyvoice-api:latest  # reuse built image
+    container_name: cosyvoice-webui-server
+    restart: unless-stopped
+    command:
+      - "sh"
+      - "-c"
+      - |
+        ARGS='--server-port 7860 --language zh --share '
+        exec conda run --no-capture-output -n cosyvoice_vllm python api/webui.py $$ARGS
+    environment:
+      - MODEL_DIR=${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}
+    volumes:
+      - ${MODELS_PATH:-../pretrained_models}:/workspace/CosyVoice/pretrained_models
+      - ${CACHE_PATH:-../.cache}:/root/.cache
+    ports:
+      - "${WEBUI_PORT:-7860}:7860"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - cosyvoice-network
+    depends_on:
+      - cosyvoice-api  # optional: if webui calls API internally
+
+
 # Network definition
 networks:
   cosyvoice-network:
