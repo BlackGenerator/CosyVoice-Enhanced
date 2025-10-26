@@ -89,8 +89,8 @@ services:
       - "sh"
       - "-c"
       - |
-        ARGS='--server-port 8080 --language zh --share '
-        exec conda run --no-capture-output -n cosyvoice_vllm python api/webui.py $$ARGS
+        ARGS='--server-port 8080 --language zh --share --model ../${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B'
+        exec conda run --no-capture-output -n cosyvoice_vllm python api/webui.py $ARGS
     environment:
       - MODEL_DIR=${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}
     volumes:
@@ -105,8 +105,6 @@ services:
         max-file: "3"
     networks:
       - cosyvoice-network
-    depends_on:
-      - cosyvoice-api  # optional: if webui calls API internally
 
 
 # Network definition
