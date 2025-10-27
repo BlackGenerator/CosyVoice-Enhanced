@@ -58,6 +58,9 @@ RUN conda run -n ${VENV_NAME} pip uninstall -y onnxruntime onnxruntime-gpu && \
     conda run -n ${VENV_NAME} pip install onnxruntime-gpu \
         --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
 
+# Install WebUI dependencies
+RUN pip install "gradio>=4.20.0" "pydantic-extra-types[pycountry]>=2.10.5"
+
 # --- Cleanup ---
 RUN rm -f constraints.txt requirements_filtered.txt
 
