@@ -53,11 +53,6 @@ RUN mamba install -y -n ${VENV_NAME} -c conda-forge pynini==2.1.5
 RUN conda run -n ${VENV_NAME} pip install -r requirements_filtered.txt -c constraints.txt && \
     conda run -n ${VENV_NAME} pip install pyloudnorm flask waitress transformers==4.53.3 vllm==0.9.0 -c constraints.txt
 
-# --- Upgrade onnxruntime to CUDA 12 compatible version ---
-RUN conda run -n ${VENV_NAME} pip uninstall -y onnxruntime onnxruntime-gpu && \
-    conda run -n ${VENV_NAME} pip install onnxruntime-gpu \
-        --extra-index-url https://aiinfra.pkgs.visualstudio.com/PublicPackages/_packaging/onnxruntime-cuda-12/pypi/simple/
-
 # Install WebUI dependencies
 RUN pip install "gradio==5.4.0"
 
