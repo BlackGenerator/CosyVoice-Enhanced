@@ -23,9 +23,7 @@ services:
       - |
         ARGS='--host 0.0.0.0 --port 9996 --model ../${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}'
         case "${LOAD_JIT}" in true) ARGS="$ARGS --load-jit";; esac
-        case "${LOAD_TRT}" in true) ARGS="$ARGS --load-trt";; esac
         case "${FP16}" in true) ARGS="$ARGS --fp16";; esac
-        case "${LOAD_VLLM}" in true) ARGS="$ARGS --load-vllm";; esac
         case "${NO_AUTO_VLLM}" in true) ARGS="$ARGS --no-auto-vllm";; esac
         exec conda run --no-capture-output -n cosyvoice_vllm python api/api.py $ARGS
 
