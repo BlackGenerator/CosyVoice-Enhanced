@@ -3,115 +3,88 @@ version: '3.8'
 services:
   cosyvoice-api:
     build:
-      context: ..  # Build context is project root
-      dockerfile: docker/Dockerfile  # Dockerfile path relative to context
-    image: cosyvoice-api:latest
+      context: ..                # 构建上下文：项目根目录
+      dockerfile: docker/Dockerfile
+    image: cosyvoice-cpu:latest
     container_name: cosyvoice-api-server
     restart: unless-stopped
-    # GPU support for CUDA and VLLM acceleration
-#    deploy:
-#      resources:
-#        reservations:
-#          devices:
-#            - driver: nvidia
-#              count: all
-#              capabilities: [gpu]
-    
     command:
       - "sh"
       - "-c"
       - |
-        ARGS='--host 0.0.0.0 --port 9996 --model ../${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}'
-        case "${LOAD_JIT}" in true) ARGS="$ARGS --load-jit";; esac
-        case "${FP16}" in true) ARGS="$ARGS --fp16";; esac
-        case "${NO_AUTO_VLLM}" in true) ARGS="$ARGS --no-auto-vllm";; esac
-        exec conda run --no-capture-output -n cosyvoice_vllm python api/api.py $ARGS
+        ARGS="--host 0.0.0.0 --port ${API_PORT} --model ../${MODEL_DIR}"
+        if [ "$LOAD_JIT" = "true" ] || [ "$LOAD_JIT" = "True" ] || [ "$LOAD_JIT" = "1" ]; then
+          ARGS="$ARGS --load-jit"
+        fi
+        # 强制禁用 GPU 相关选项（即使 .env 错误）
+        ARGS="$ARGS --no-trt --no-vllm --fp16 false"
+        exec python api/api.py $$ARGS
 
-    # Environment variables (can be overridden via .env file)
     environment:
-      # Model Configuration
-      - MODEL_DIR=${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}
-      
-      # Performance Options
-      - LOAD_TRT=${LOAD_TRT:-True}
-      - FP16=${FP16:-True}
-      
-      # VLLM Configuration
-      - LOAD_VLLM=${LOAD_VLLM:-auto}
-      - NO_AUTO_VLLM=${NO_AUTO_VLLM:-}
-      
-    # Volume mappings
-    volumes:
-      # Model files - IMPORTANT: Update this path to your actual model directory
-      - ${MODELS_PATH:-../pretrained_models}:/workspace/CosyVoice/pretrained_models
-      
-      # Logs and temporary files
-      - ${LOGS_PATH:-../logs}:/workspace/CosyVoice/logs
-      - ${TMP_PATH:-../tmp}:/workspace/CosyVoice/tmp
-      
-      # Optional: Custom configuration
-      - ${CONFIG_PATH:-../config}:/workspace/CosyVoice/config
+      - MODEL_DIR=${MODEL_DIR}
+      - LOAD_JIT=${LOAD_JIT}
+      - OMP_NUM_THREADS=4
+      - PYTHONUNBUFFERED=1
 
-      # Cache for downloaded models/packages
-      - ${CACHE_PATH:-../.cache}:/root/.cache
-    
-    # Port mapping - Fixed to 9996 as per container default
+    volumes:
+      - ${MODELS_PATH}:/workspace/CosyVoice/pretrained_models
+      - ${LOGS_PATH}:/workspace/CosyVoice/logs
+      - ${TMP_PATH}:/workspace/CosyVoice/tmp
+      - ${CONFIG_PATH}:/workspace/CosyVoice/config
+      - ${CACHE_PATH}:/root/.cache
+
     ports:
-      - "${API_PORT:-9996}:9996"
-    
-    # Health check
+      - "${API_PORT}:${API_PORT}"
+
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9996/health"]
+      test: ["CMD", "curl", "-f", "http://localhost:${API_PORT}/health"]
       interval: 30s
       timeout: 10s
       retries: 3
       start_period: 60s
-    
-    # Logging configuration
+
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
-    
-    # Network configuration
+
     networks:
-      - cosyvoice-network
+      - cosyvoice-net
+
 
   cosyvoice-webui:
-    image: cosyvoice-api:latest  # reuse built image
+    image: cosyvoice-cpu:latest  # 复用已构建的镜像
     container_name: cosyvoice-webui-server
     restart: unless-stopped
     command:
       - "sh"
       - "-c"
       - |
-        ARGS='--server-port 8000 --language zh --model ../${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}'
-        exec conda run --no-capture-output -n cosyvoice_vllm python api/webui.py $ARGS
+        ARGS="--server-port ${WEBUI_PORT} --language zh --model ../${MODEL_DIR}"
+        exec python api/webui.py $$ARGS
+
     environment:
-      - MODEL_DIR=${MODEL_DIR:-pretrained_models/CosyVoice2-0.5B}
+      - MODEL_DIR=${MODEL_DIR}
+      - OMP_NUM_THREADS=4
+
     volumes:
-      - ${MODELS_PATH:-../pretrained_models}:/workspace/CosyVoice/pretrained_models
-      - ${CACHE_PATH:-../.cache}:/root/.cache
+      - ${MODELS_PATH}:/workspace/CosyVoice/pretrained_models
+      - ${CACHE_PATH}:/root/.cache
+
     ports:
-      - "${WEBUI_PORT:-8000}:8000"
+      - "${WEBUI_PORT}:${WEBUI_PORT}"
+
     logging:
       driver: "json-file"
       options:
         max-size: "10m"
         max-file: "3"
+
     networks:
-      - cosyvoice-network
+      - cosyvoice-net
 
 
-# Network definition
 networks:
-  cosyvoice-network:
+  cosyvoice-net:
     driver: bridge
-    
-# Optional: Shared volumes for data persistence
-volumes:
-  cosyvoice-logs:
-    driver: local
-  cosyvoice-tmp:
-    driver: local
