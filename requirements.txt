@@ -42,3 +42,4 @@ pathlib>=1.0.1
 scipy>=1.7.0
 peft
 flask
+pyloudnorm>=0.1.0

@@ -61,7 +61,7 @@ services:
       - "sh"
       - "-c"
       - |
-        ARGS="--server-port ${WEBUI_PORT} --language zh --model ../${MODEL_DIR}"
+        ARGS="--host 0.0.0.0 --port ${WEBUI_PORT} --language zh --model ../${MODEL_DIR}"
         exec python api/webui.py $$ARGS
 
     environment:
