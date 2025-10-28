@@ -17,7 +17,7 @@ services:
           ARGS="$ARGS --load-jit"
         fi
         # 强制禁用 GPU 相关选项（即使 .env 错误）
-        ARGS="$ARGS --no-trt --no-vllm --fp16 false"
+        ARGS="$ARGS --load-trt false --no-auto-vllm false --load-vllm false --fp16 false"
         exec python api/api.py $$ARGS
 
     environment:
