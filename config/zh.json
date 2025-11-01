@@ -1,5 +1,5 @@
 {
-  "title": "🎵 CosyVoice 专业语音合成工作室",
+  "title": "🎵 KritAi 专业语音合成工作室",
   "subtitle": "先进的文本转语音技术，支持声音克隆和自然语言控制",
   "current_model": "当前模型",
   "model_management": "模型管理",
@@ -40,4 +40,5 @@
   "success": "成功",
   "warning": "警告",
   "info": "信息"
+
 }
