@@ -1,5 +1,5 @@
 {
-  "title": "🎵 CosyVoice TTS Studio",
+  "title": "🎵 KritAi TTS Studio",
   "subtitle": "Advanced Text-to-Speech with Voice Cloning & Natural Language Control",
   "current_model": "Current Model",
   "model_management": "Model Management",
@@ -81,4 +81,5 @@
   "status": "Status",
   "voice_management_disabled": "Voice Management Disabled",
   "voice_management_disabled_message": "Voice management is disabled when running in fixed model mode."
+
 }
