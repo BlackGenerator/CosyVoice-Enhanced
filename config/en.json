@@ -1,5 +1,5 @@
 {
-  "title": "🎵 CosyVoice Professional TTS Studio",
+  "title": "🎵 KritAi Professional TTS Studio",
   "subtitle": "Advanced Text-to-Speech with Voice Cloning & Natural Language Control",
   "current_model": "Current Model",
   "model_management": "Model Management",
@@ -40,4 +40,5 @@
   "success": "Success",
   "warning": "Warning",
   "info": "Info"
+
 }
