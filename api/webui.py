@@ -537,9 +537,9 @@ def create_interface(fixed_model=None):
                 with gr.Group():
                     model_management_header = gr.Markdown(f"### 🔧 {i18n.get_text('model_management')}")
                     
-                    model_status = gr.HTML(
-                        f'<div><span class="status-indicator status-unloaded"></span>{i18n.get_text("model_status")}: {i18n.get_text("not_loaded")}</div>'
-                    )
+                    # model_status = gr.HTML(
+                    #    f'<div><span class="status-indicator status-unloaded"></span>{i18n.get_text("model_status")}: {i18n.get_text("not_loaded")}</div>'
+                    # )
                     
                     # Show model selection only if not in fixed model mode
                     if fixed_model is None:
@@ -821,8 +821,8 @@ def create_interface(fixed_model=None):
                 color = "#fff3e0"
                 text_color = "#ef6c00"
                 icon = "⚡"
-            
-            return f"<div style='padding: 10px; background: {color}; border-radius: 5px; margin: 10px 0; color: {text_color};'><b>{icon} {model_type}:</b> Supports {modes_str}</div>"
+            return f"<div></div>"
+            # return f"<div style='padding: 10px; background: {color}; border-radius: 5px; margin: 10px 0; color: {text_color};'><b>{icon} {model_type}:</b> Supports {modes_str}</div>"
         
         # Event handlers
         def update_model_status():
