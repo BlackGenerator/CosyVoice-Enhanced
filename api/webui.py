@@ -489,6 +489,7 @@ def create_interface(fixed_model=None):
     
     # Custom CSS for professional styling
     custom_css = """
+    footer {visibility: hidden; display: none !important;}
     .main-container {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         min-height: 100vh;
