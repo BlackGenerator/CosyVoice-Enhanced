@@ -518,7 +518,7 @@ def create_interface(fixed_model=None):
     }
     """
     
-    with gr.Blocks(css=custom_css, title="CosyVoice Professional TTS") as demo:
+    with gr.Blocks(css=custom_css, title="KritAi Professional TTS") as demo:
         
         # Session state for model persistence
         model_state = gr.State(value=current_model_name if current_model_name else fixed_model)
